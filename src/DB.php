@@ -6,8 +6,8 @@ use Exception;
 use PDOException;
 
 class DB {
-	private static $instance = null;
-	private $pdo;
+	private static ?DB $instance = null;
+	private PDO $pdo;
 
 	public function __construct(string $dsn, string $username, string $password) {
 		$options = [
@@ -18,8 +18,10 @@ class DB {
 		$this->pdo = new PDO($dsn, $username, $password, $options);
 	}
 
-	public static function createInstance(...$args) {
+	/** @phpstan-ignore missingType.parameter */
+	public static function createInstance(...$args): bool {
 		if (self::$instance === null) {
+			/** @phpstan-ignore argument.type */
 			self::$instance = new DB(...$args);
 			return true;
 		}
@@ -27,7 +29,7 @@ class DB {
 		return false;
 	}
 
-	public final static function getInstance() {
+	public final static function getInstance(): DB {
 		if (self::$instance === null) {
 			throw new Exception("HoltBosse\DB\DB Instance not created!!!");
 		}
@@ -38,7 +40,10 @@ class DB {
 		return $this->pdo;
 	}
 
-	public static function fetch(string $query, $paramsarray=[], array $options=[]): object|array {
+	/**
+		* @param array<string, mixed> $options
+	*/ 
+	public static function fetch(string $query, mixed $paramsarray=[], array $options=[]): mixed {
 		$classInstance = DB::getInstance();
 
 		if (!is_array($paramsarray)) {
@@ -47,10 +52,14 @@ class DB {
 
 		$stmt = $classInstance->getPdo()->prepare($query);
 		$stmt->execute($paramsarray);
+		/** @phpstan-ignore argument.type */
 		return $stmt->fetch($options["mode"] ?? PDO::FETCH_OBJ);
 	}
 
-	public static function fetchAll(string $query, $paramsarray=[], array $options=[]): object|array {
+	/**
+		* @param array<string, mixed> $options
+	*/ 
+	public static function fetchAll(string $query, mixed $paramsarray=[], array $options=[]): mixed {
 		$classInstance = DB::getInstance();
 
 		if (!is_array($paramsarray)) {
@@ -59,10 +68,11 @@ class DB {
 
 		$stmt = $classInstance->getPdo()->prepare($query);
 		$stmt->execute($paramsarray);
+		/** @phpstan-ignore argument.type */
 		return $stmt->fetchAll($options["mode"] ?? PDO::FETCH_OBJ);
 	}
 
-	public static function exec(string $query, $paramsarray=[]) {
+	public static function exec(string $query, mixed $paramsarray=[]): bool {
 		$classInstance = DB::getInstance();
 
 		if (!is_array($paramsarray)) {
@@ -73,7 +83,7 @@ class DB {
 		return $stmt->execute($paramsarray);
 	}
 
-	public static function getLastInsertedId() {
+	public static function getLastInsertedId(): string|false {
 		$classInstance = DB::getInstance();
 
 		return $classInstance->getPdo()->lastInsertId();
