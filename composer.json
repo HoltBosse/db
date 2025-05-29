@@ -1,0 +1,12 @@
+{
+    "name": "holtbosse/db",
+    "description": "simple database class for working with pdo",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "HoltBosse\\Db\\": "src/"
+        }
+    },
+    "require": {}
+}
