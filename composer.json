@@ -1,19 +1,19 @@
 {
-    "name": "holtbosse/db",
-    "description": "simple database class for working with pdo",
-    "type": "library",
-    "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "HoltBosse\\DB\\": "src/"
-        }
-    },
-    "require-dev": {
-        "phpstan/phpstan": "^2.1"
-    },
-    "scripts": {
-        "test": [
-            "vendor/bin/phpstan analyse"
-        ]
-    }
+	"name": "holtbosse/db",
+	"description": "simple database class for working with pdo",
+	"type": "library",
+	"license": "MIT",
+	"autoload": {
+		"psr-4": {
+			"HoltBosse\\DB\\": "src/"
+		}
+	},
+	"require-dev": {
+		"phpstan/phpstan": "^2.1"
+	},
+	"scripts": {
+		"test": [
+			"vendor/bin/phpstan analyse"
+		]
+	}
 }
