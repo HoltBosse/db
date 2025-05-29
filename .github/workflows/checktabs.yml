@@ -1,12 +1,6 @@
 name: Check Tabs in Codebase
 
-on:
-  push:
-    paths:
-      - '**/*'
-  pull_request:
-    paths:
-      - '**/*'
+on: [push]
 
 jobs:
   check-tabs:
