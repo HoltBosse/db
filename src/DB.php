@@ -7,6 +7,7 @@ use PDOException;
 
 class DB {
 	private static ?DB $instance = null;
+	private static Bool $forceTypes = false;
 	private PDO $pdo;
 
 	public function __construct(string $dsn, string $username, string $password) {
@@ -27,6 +28,50 @@ class DB {
 		}
 
 		return false;
+	}
+
+	/* 
+		this exists solely for terrible hosting environments that don't handle types properly
+		this is not officially supported and may be removed or changed in future versions
+	*/
+	public static function forceTypes(Bool $force): void {
+		self::$forceTypes = $force;
+	}
+
+	private static function enforceTypes(mixed $input): mixed {
+		$inputType = gettype($input);
+		if($inputType === "array" || $inputType === "object") {
+			// @phpstan-ignore-next-line
+			foreach($input as $key => $value) {
+				if(is_numeric($value)) {
+					if(strval(intval($value)) === strval($value)) {
+						if($inputType === "array") {
+							// @phpstan-ignore-next-line
+							$input[$key] = intval($value);
+						} else {
+							$input->$key = intval($value);
+						}
+					} else {
+						if($inputType === "array") {
+							// @phpstan-ignore-next-line
+							$input[$key] = floatval($value);
+						} else {
+							$input->$key = floatval($value);
+						}
+					}
+				} elseif(gettype($value) === "array" || gettype($value) === "object") {
+					if($inputType === "array") {
+						// @phpstan-ignore-next-line
+						$input[$key] = self::enforceTypes($value);
+					} else {
+						$input->$key = self::enforceTypes($value);
+					}
+				}
+			}
+			return $input;
+		} else {
+			return $input;
+		}
 	}
 
 	public final static function getInstance(): DB {
@@ -53,7 +98,11 @@ class DB {
 		$stmt = $classInstance->getPdo()->prepare($query);
 		$stmt->execute($paramsarray);
 		/** @phpstan-ignore argument.type */
-		return $stmt->fetch($options["mode"] ?? PDO::FETCH_OBJ);
+		$result = $stmt->fetch($options["mode"] ?? PDO::FETCH_OBJ);
+		if(self::$forceTypes && $result !== false) {
+			$result = self::enforceTypes($result);
+		}
+		return $result;
 	}
 
 	/**
@@ -69,7 +118,11 @@ class DB {
 		$stmt = $classInstance->getPdo()->prepare($query);
 		$stmt->execute($paramsarray);
 		/** @phpstan-ignore argument.type */
-		return $stmt->fetchAll($options["mode"] ?? PDO::FETCH_OBJ);
+		$result = $stmt->fetchAll($options["mode"] ?? PDO::FETCH_OBJ);
+		if(self::$forceTypes) {
+			$result = self::enforceTypes($result);
+		}
+		return $result;
 	}
 
 	public static function exec(string $query, mixed $paramsarray=[]): bool {
